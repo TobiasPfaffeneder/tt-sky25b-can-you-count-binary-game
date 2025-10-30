@@ -5,7 +5,7 @@
 `default_nettype none
 `include "hello.v"
 
-module project (
+module tt_um_dip_switch_game_TobiasPfaffeneder (
     input  wire [7:0] ui_in,     // Dedicated input pins
     output wire [7:0] uo_out,    // Dedicated output pins
     input  wire [7:0] uio_in,    // Bidirectional IO input path
