@@ -39,6 +39,6 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
     assign uo_out[7]    = 0;
 
     // Tie off unused inputs to avoid warnings
-    wire _unused = &{uio_in, ena, rst_n};
+    wire _unused = &{ui_in[7:4], uio_in, ena, clk rst_n};
 
 endmodule
