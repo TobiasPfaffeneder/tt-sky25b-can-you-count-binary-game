@@ -7,6 +7,10 @@ module sevenseg_decoder (
     input  wire [3:0] digit,
     output reg  [6:0] seg
 );
+
+    // Initialisierung für deterministisches Verhalten im GL-Test
+    initial seg = 7'b0000000;
+
     always @(*) begin
         case (digit)
             4'd0: seg = 7'b1111110;
