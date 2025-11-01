@@ -1,9 +1,14 @@
 /*
- * Top-level module for the "hello" project
+ * Top-level module for the "dip_switch_game" project
  * SPDX-License-Identifier: Apache-2.0
  */
 `default_nettype none
-`include "hello.v"
+
+// Vizualization
+`include "sevenseg_decoder.v"
+//`include "bcd_splitter.v"
+//`include "digit_selector.v"
+//`include "sevenseg_display_controller.v"
 
 module tt_um_dip_switch_game_TobiasPfaffeneder (
     input  wire [7:0] ui_in,     // Dedicated input pins
@@ -16,19 +21,24 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
     input  wire rst_n            // Active-low reset (unused)
 );
 
-    // Instantiate the hello module
-    // Connect ui_in[0] to input A, and uo_out[0] to output B
-    hello hello_inst (
-        .A(ui_in[0]),
-        .B(uo_out[0])
+    // Instantiate the modules
+    // sevenseg_display_controller sevenseg_display_controller_inst (
+    //     .clk(clk),
+    //     .value(ui_in[7:0]),
+    //     .seg(uo_out[6:0])
+    // );
+
+    sevenseg_decoder sevenseg_decoder_inst (
+        .digit(ui_in[3:0]),
+        .seg(uo_out[6:0])
     );
 
     // Set unused output bits to 0
-    assign uo_out[7:1] = 7'b0;
-    assign uio_out     = 8'b0;
-    assign uio_oe      = 8'b0;
+    assign uio_out      = 0;
+    assign uio_oe       = 0;
+    assign uo_out[7]    = 0;
 
     // Tie off unused inputs to avoid warnings
-    wire _unused = &{uio_in, ena, clk, rst_n};
+    wire _unused = &{uio_in, ena, rst_n};
 
 endmodule
