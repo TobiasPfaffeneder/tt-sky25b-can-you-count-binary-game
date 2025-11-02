@@ -3,6 +3,7 @@
 `define __SEVENSEGDISPLAYCONTROLLER__
 
 `default_nettype none
+
 `include "bcd_splitter.v"
 `include "digit_selector.v"
 `include "sevenseg_decoder.v"

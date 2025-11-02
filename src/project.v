@@ -4,7 +4,7 @@
  */
 `default_nettype none
 
-`include "sevenseg_decoder.v"
+`include "sevenseg_display_controller.v"
 
 module tt_um_dip_switch_game_TobiasPfaffeneder (
     input  wire [7:0] ui_in,     // Dedicated input pins
@@ -21,9 +21,10 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
     wire [6:0] seg_w;
 
     // Decoder-Instanz
-    sevenseg_decoder sevenseg_decoder_inst (
-        .digit(ui_in[3:0]),
-        .seg(seg_w)
+    sevenseg_display_controller sevenseg_display_controller_inst (
+        .clk(clk),
+        .value(ui_in[7:0]),
+        .seg(uo_out[6:0])
     );
 
     // Ausgabe vollständig definiert (8 Bit)
@@ -34,7 +35,6 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
     assign uio_oe  = 8'b0;
 
     // Vermeidung von "floating" Inputs im GL-Test
-    wire [3:0] unused_ui_in = ui_in[7:4];
-    wire _unused_ok = &{unused_ui_in, uio_in, ena, clk, rst_n};
+    wire _unused_ok = &{uio_in, ena, rst_n};
 
 endmodule
