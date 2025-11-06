@@ -25,7 +25,6 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
     wire [7:0]  user_input = ui_in;
     wire [7:0]  random_number;
     wire [6:0]  seg_display;
-    wire [1:0]  display_state;  // optional für Testbench
     reg         trigger = 0;
     reg         trigger_r = 0;   // gepuffertes Trigger-Signal für current_number
     reg  [7:0]  current_number = 0;

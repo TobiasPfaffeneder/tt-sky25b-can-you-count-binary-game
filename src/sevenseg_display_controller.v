@@ -14,6 +14,7 @@ module sevenseg_display_controller(
     output wire [6:0] seg
 );
     // BCD-Signale
+    wire [1:0] state;
     wire [3:0] hundreds, tens, ones;
     reg  [3:0] current_digit;
 
