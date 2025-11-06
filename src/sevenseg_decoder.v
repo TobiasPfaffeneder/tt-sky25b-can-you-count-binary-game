@@ -23,7 +23,8 @@ module sevenseg_decoder (
             4'd7: seg = 7'b1110000;
             4'd8: seg = 7'b1111111;
             4'd9: seg = 7'b1111011;
-            default: seg = 7'b0000001;
+            4'd10: seg = 7'b0000000;
+            default: seg = 7'b0000000;
         endcase
     end
 endmodule
