@@ -11,8 +11,7 @@ module sevenseg_display_controller(
     input  wire       rst,
     input  wire       trigger,
     input  wire [7:0] value,
-    output wire [6:0] seg,
-    output wire [1:0] state  // optional zur Beobachtung im Testbench
+    output wire [6:0] seg
 );
     // BCD-Signale
     wire [3:0] hundreds, tens, ones;

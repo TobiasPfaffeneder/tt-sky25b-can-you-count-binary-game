@@ -45,8 +45,7 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
         .rst(rst),
         .trigger(trigger_r),
         .value(current_number),
-        .seg(seg_display),
-        .state(display_state)
+        .seg(seg_display)
     );
 
     // === 1. Trigger-Generierung & Puffer ===
