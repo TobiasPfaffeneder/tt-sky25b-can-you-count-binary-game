@@ -24,7 +24,7 @@ But hurry up — your time is limited, and the game gets faster as you play!
 
 ---
 
-## 🚀 How to Play
+## ▶️ How to Play
 
 1. Power up your Tiny Tapeout PCB with this module loaded.  
 2. To start the game, bring all DIP switches except the 8th one in the **OFF** position.  
@@ -50,7 +50,7 @@ But hurry up — your time is limited, and the game gets faster as you play!
 
 ---
 
-## 🧰 Top-Level I/O
+## ⚙️ Top-Level I/O
 
 | Signal         | Dir | W | Description |
 |----------------|-----|---|-------------|
