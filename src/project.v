@@ -12,49 +12,51 @@
 `include "blink_controller.v"
 
 module tt_um_dip_switch_game_TobiasPfaffeneder (
-    input  wire [7:0] ui_in,
+    input wire [7:0] ui_in,
     output wire [7:0] uo_out,
-    input  wire [7:0] uio_in,
+    input wire [7:0] uio_in,
     output wire [7:0] uio_out,
     output wire [7:0] uio_oe,
-    input  wire ena,
-    input  wire clk,
-    input  wire rst_n
+    input wire ena,
+    input wire clk,
+    input wire rst_n
 );
-
-    wire rst = ~rst_n;
-
+    // general
+    wire rst_button = ~rst_n;
+    reg rst_init = 1'b1;
+    wire rst = rst_button | rst_init;
     wire [7:0] user_input = {ui_in[0],ui_in[1],ui_in[2],ui_in[3],ui_in[4],ui_in[5],ui_in[6],ui_in[7]};
-    wire [7:0] random_number;
-    wire [6:0] seg_display;
-
-    reg trigger_display = 1'b0;
-    reg [7:0] current_number = 8'd0;
     reg [7:0] uo_out_reg = 8'b00000000;
-    reg [7:0] score = 8'd0;
+
+    // random number
+    wire [7:0] random_number;
+
+    // display
+    wire [6:0] seg_display;
+    reg trigger_display = 1'b0;
     wire display_done;
 
+    // timer
     wire [7:0] timer_value;
     reg restart_timer = 1'b0;
-
     wire point_state;
-
-    localparam PREGAME = 3'd0;
-    localparam GENERATE_RANDOM_NUMBER = 3'd1;
-    localparam WAIT_FOR_RANDOM_NUMBER = 3'd2;
-    localparam DISPLAY_NUMBER = 3'd3;
-    localparam GUESSING = 3'd4;
-    localparam SHOW_SCORE = 3'd5;
-    localparam GAME_OVER = 3'd6;
-    reg [2:0] game_state = PREGAME;
-
     localparam BASETIME = 8'd30;
     wire [7:0] dynamic_maxtime;
-    assign dynamic_maxtime = (score < 10) ? BASETIME - score :
-                             (score < 20) ? 20 - (score - 10)/2 :
-                             (score < 30) ? 15 - (score - 20)/3 :
-                                            10;
 
+    // game
+    reg [7:0] score = 8'd0;
+    reg [7:0] current_number = 8'd0;
+
+    // state machine 
+    localparam PREGAME = 3'd0;
+    localparam GENERATE_RANDOM_NUMBER = 3'd1;
+    localparam DISPLAY_NUMBER = 3'd2;
+    localparam GUESSING = 3'd3;
+    localparam SHOW_SCORE = 3'd4;
+    localparam GAME_OVER = 3'd5;
+    reg [2:0] game_state = PREGAME;
+
+    // Instances of modules
     random_number_generator rng (
         .clk(clk),
         .rst(rst),
@@ -86,6 +88,19 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
         .point_state(point_state)
     );
 
+    // initialize all modules
+    always @(posedge clk) begin
+        if(rst_init)
+            rst_init <= 1'b0;
+    end
+
+    // assign guessing time
+    assign dynamic_maxtime = (score < 10) ? BASETIME - score :
+                             (score < 20) ? 20 - (score - 10)/2 :
+                             (score < 30) ? 15 - (score - 20)/3 :
+                                            10;
+
+    // state machine
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             trigger_display <= 1'b0;
@@ -140,6 +155,7 @@ module tt_um_dip_switch_game_TobiasPfaffeneder (
         end
     end
 
+    // outputs
     assign uo_out = uo_out_reg;
     assign uio_out = 8'b0;
     assign uio_oe = 8'b0;

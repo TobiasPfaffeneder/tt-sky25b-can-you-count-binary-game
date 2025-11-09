@@ -2,12 +2,10 @@
 `ifndef __SEVENSEGDECODER__
 `define __SEVENSEGDECODER__
 
-
 module sevenseg_decoder (
-    input  wire [3:0] digit,
-    output reg  [6:0] seg
+    input wire [3:0] digit,
+    output reg [6:0] seg
 );
-
     always @(*) begin
         case (digit)
             4'd0: seg = 7'b0111111;

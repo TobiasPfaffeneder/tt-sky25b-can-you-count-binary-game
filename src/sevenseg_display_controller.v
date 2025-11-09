@@ -7,16 +7,16 @@
 `include "sevenseg_decoder.v"
 
 module sevenseg_display_controller(
-    input  wire       clk,
-    input  wire       rst,
-    input  wire       trigger,
-    input  wire [7:0] value,
+    input wire clk,
+    input wire rst,
+    input wire trigger,
+    input wire [7:0] value,
     output wire [6:0] seg,
-    output wire       done
+    output wire done
 );
     wire [1:0] state;
     wire [3:0] hundreds, tens, ones;
-    reg  [3:0] current_digit;
+    reg [3:0] current_digit;
 
     localparam DISPLAY_OFF = 4'd10;
 
@@ -35,6 +35,11 @@ module sevenseg_display_controller(
         .done(done)
     );
 
+    sevenseg_decoder decoder (
+        .digit(current_digit),
+        .seg(seg)
+    );
+
     always @(*) begin
         case (state)
             2'd0: current_digit = hundreds;
@@ -44,13 +49,7 @@ module sevenseg_display_controller(
             default: current_digit = DISPLAY_OFF;
         endcase
     end
-
-    sevenseg_decoder decoder (
-        .digit(current_digit),
-        .seg(seg)
-    );
 endmodule
-
 
 `endif
 `default_nettype wire

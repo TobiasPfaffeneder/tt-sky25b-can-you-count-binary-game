@@ -3,13 +3,13 @@
 `define __TIMER__
 
 module timer (
-    input  wire       clk,
-    input  wire       rst,
-    input  wire       restart_timer,
+    input wire clk,
+    input wire rst,
+    input wire restart_timer,
     output reg [7:0] timer_value  
 );
 
-    localparam TIMER_DURATION = 10'd1000; // 1 Sekunde bei 1 kHz
+    localparam TIMER_DURATION = 10'd1000; // 1 second
     reg [9:0] counter = 0;
     reg active = 0;
 
