@@ -14,7 +14,7 @@ To learn more and get started, visit https://tinytapeout.com.
 
 **Module:** `tt_um_dip_switch_game_TobiasPfaffeneder`
 
-**Can You Count Binary** is a fast-paced logic game designed for the Tiny Tapeout platform.  
+**Can You Count Binary** is a logic game designed for the Tiny Tapeout platform.  
 It runs entirely on the Tiny Tapeout PCB — no external hardware required!  
 Your goal is simple: convert decimal numbers displayed on the seven-segment display into their binary equivalents using the onboard DIP switches.  
 But hurry up — your time is limited, and the game gets faster as you play!
