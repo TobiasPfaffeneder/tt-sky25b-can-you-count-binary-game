@@ -40,8 +40,9 @@ But hurry up — your time is limited, and the game gets faster as you play!
 ## 👉 Try it know on Wokwi
 [https://wokwi.com/projects/446871385453862913](https://wokwi.com/projects/446871385453862913)
 
+---
 
-## External hardware
+## 🔌 External hardware
 
 No external hardware is required.
 The Dip switches and the seven-segment display on the Tiny Tapeout PCB are used to play the game.
