@@ -4,7 +4,7 @@
 **Can You Count Binary** is a logic game designed for the Tiny Tapeout platform.  
 It runs entirely on the Tiny Tapeout PCB — no external hardware required!  
 Your goal is simple: convert decimal numbers displayed on the seven-segment display into their binary equivalents using the onboard DIP switches.  
-But hurry up — your time is limited, and the game gets faster as you play!
+But hurry up - your time is limited, and the game gets faster as you play!
 
 ---
 
