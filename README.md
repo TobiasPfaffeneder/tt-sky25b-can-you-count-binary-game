@@ -10,33 +10,55 @@ Tiny Tapeout is an educational project that aims to make it easier and cheaper t
 
 To learn more and get started, visit https://tinytapeout.com.
 
-## Set up your Verilog project
+# Tiny Tapeout: Can You Count Binary?
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
+**Module:** `tt_um_dip_switch_game_TobiasPfaffeneder`
 
-The GitHub action will automatically build the ASIC files using [LibreLane](https://www.zerotoasiccourse.com/terminology/librelane/).
+**Can You Count Binary** is a fast-paced logic game designed for the Tiny Tapeout platform.  
+It runs entirely on the Tiny Tapeout PCB — no external hardware required!  
+Your goal is simple: convert decimal numbers displayed on the seven-segment display into their binary equivalents using the onboard DIP switches.  
+But hurry up — your time is limited, and the game gets faster as you play!
 
-## Enable GitHub actions to build the results page
+**Try it now on WOKWI:**  
+👉 [https://wokwi.com/projects/446871385453862913](https://wokwi.com/projects/446871385453862913)
 
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
+---
 
-## Resources
+## 🚀 How to Play
 
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
+1. Power up your Tiny Tapeout PCB with this module loaded.  
+2. To start the game, bring all DIP switches except the 8th one in the **OFF** position.  
+3. A random 8-bit number appears on the seven-segment display.  
+   - The number is always shown as three digits (e.g. `123`, `045`, `007`, ...).  
+4. Convert the decimal number to binary and enter it using the DIP switches:  
+   - **Switch 8** = Least Significant Bit (2⁰)  
+   - **Switch 1** = Most Significant Bit (2⁷)  
+5. If your input is correct, a new random number will be displayed.  
+6. Be quick! You start with **30 seconds per number**, and the timer gets shorter as the game progresses.  
+   - If the timer runs out before you enter the correct value, the game ends.  
+7. When the game is over, your **final score** will be shown on the display.
 
-## What next?
+---
 
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
-  - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
+## ✨ Features
+
+- 8-bit decimal numbers displayed on a single seven-segment display  
+- Pseudo-random number generation  
+- Game timer with visual feedback on the display  
+- Scoring system  
+- Fully playable without any external components  
+
+---
+
+## 🧰 Top-Level I/O
+
+| Signal         | Dir | W | Description |
+|----------------|-----|---|-------------|
+| `ui_in[7:0]`   | in  | 8 | **DIP switches** (player input) |
+| `uo_out[7:0]`  | out | 8 | **Seven-segment display** (parallel 8-bit) |
+| `uio_in[7:0]`  | in  | 8 | Unused |
+| `clk`          | in  | 1 | System clock (1 kHz) |
+| `rst_n`        | in  | 1 | Asynchronous reset (active-low) |
+| `ena`          | in  | 1 | Always `1` on Tiny Tapeout |
+
+---
