@@ -1,11 +1,11 @@
 # Tiny Tapeout project information
 project:
-  title:        "CAN_YOU_COUNT_BINARY"      # Project title
+  title:        "Can you count binary?"      # Project title
   author:       "Tobias Pfaffeneder"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "A simple game where the 7-segement display shows a random number and the player has to enter it on the dip switches before the timer ends."      # One line description of what your project does
+  description:  "A logic game designed for the Tiny Tapeout with a simple goal: Convert decimal numbers displayed on the seven-segment display into their binary equivalents using the onboard DIP switches before the timer ends."      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
+  clock_hz:     1000       # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
@@ -18,6 +18,13 @@ project:
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
     - "tt_um_dip_switch_game_TobiasPfaffeneder.v"
+    - "bcd_splitter.v"
+    - "blink_controller.v"
+    - "digit_selector.v"
+    - "random_number_generator.v"
+    - "sevenseg_decoder.v"
+    - "sevenseg_display_controller.v"
+    - "timer.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
@@ -33,24 +40,24 @@ pinout:
   ui[7]: "DIP-Switch 7"
 
   # Outputs
-  uo[0]: "7-Segment-Display 0"
-  uo[1]: "7-Segment-Display 1"
-  uo[2]: "7-Segment-Display 2"
-  uo[3]: "7-Segment-Display 3"
-  uo[4]: "7-Segment-Display 4"
-  uo[5]: "7-Segment-Display 5"
-  uo[6]: "7-Segment-Display 6"
-  uo[7]: "7-Segment-Display 7"
+  uo[0]: "7-Segment-Display A"
+  uo[1]: "7-Segment-Display B"
+  uo[2]: "7-Segment-Display C"
+  uo[3]: "7-Segment-Display D"
+  uo[4]: "7-Segment-Display E"
+  uo[5]: "7-Segment-Display F"
+  uo[6]: "7-Segment-Display G"
+  uo[7]: "7-Segment-Display DP"
 
   # Bidirectional pins
-  uio[0]: ""
-  uio[1]: ""
-  uio[2]: ""
-  uio[3]: ""
-  uio[4]: ""
-  uio[5]: ""
-  uio[6]: ""
-  uio[7]: ""
+  uio[0]: "unused"
+  uio[1]: "unused"
+  uio[2]: "unused"
+  uio[3]: "unused"
+  uio[4]: "unused"
+  uio[5]: "unused"
+  uio[6]: "unused"
+  uio[7]: "unused"
 
 # Do not change!
 yaml_version: 6
