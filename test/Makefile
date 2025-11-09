@@ -5,7 +5,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = tt_um_dip_switch_game_TobiasPfaffeneder.v
+PROJECT_SOURCES = tt_um_dip_switch_game_TobiasPfaffeneder.v bcd_splitter.v blink_controller.v digit_selector.v random_number_generator.v sevenseg_decoder.v sevenseg_display_controller.v timer.v
 
 ifneq ($(GATES),yes)
 
