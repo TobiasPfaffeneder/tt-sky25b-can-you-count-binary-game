@@ -6,29 +6,17 @@
 module random_number_generator (
     input  wire        clk,
     input  wire        rst,
-    input  wire        trigger,     // 1 Takt lang aktiv → neue Zahl
-    output reg  [7:0]  random_out
+    output reg  [7:0]  random = 8'hA5
 );
 
-    // === LFSR-Generator (läuft ständig) ===
-    reg [7:0] lfsr;
-    wire feedback = lfsr[7] ^ lfsr[5] ^ lfsr[4] ^ lfsr[3];
+    wire feedback = random[7] ^ random[5] ^ random[4] ^ random[3];
 
     always @(posedge clk or posedge rst) begin
         if (rst)
-            lfsr <= 8'hA5;  // Seed (fester Startwert)
+            random <= 8'hA5;
         else
-            lfsr <= {lfsr[6:0], feedback};
+            random <= {random[6:0], feedback};
     end
-
-    // === Zufallszahl bei Trigger übernehmen ===
-    always @(posedge clk or posedge rst) begin
-        if (rst)
-            random_out <= 8'd0;
-        else if (trigger)
-            random_out <= lfsr;
-    end
-
 endmodule
 
 `endif
