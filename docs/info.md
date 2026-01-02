@@ -270,7 +270,7 @@ module digit_selector (
                 counter <= counter + 1;
 
                 if ((!pause && counter >= DISPLAY_TIME) || 
-                    (pause && counter >= PAUSE_TIME)) begin
+                    (pause && counter >= PAUSE_TIME)) begin
                     counter <= 0;
 
                     if (!pause) begin
@@ -294,7 +294,76 @@ module digit_selector (
 endmodule
 ```
 
+In the testbench for this module, a reset is applied first, followed by two trigger signals separated by a time interval of 6 seconds. The resulting outputs are then inspected using **GTKWave**.  
+As expected, the hundreds digit (*00*), the tens digit (*01*), and the ones digit (*10*) are displayed sequentially, with a pause state (*11*) in between. After all digits have been shown,followed by one additional pause, the `done` signal is asserted for a short period of time.
+
+![digit_selector.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/digit_selector.PNG?raw=true)
+
 ### sevenseg_display_controller
+
+The **sevenseg_display_controller** is a top level module for the three previously shown modules. Besides the *clk* and *rst* input it gets the 8-bit *value* which should be diplayed and a *trigger* signal as an input. The outputs of the moduel are the segements of the 7-segment display and a signale that displaying the number is done.
+
+ Inside the module one instance of the **bcd_splitter**, the **digit_selector** and the **sevenseg_decoder** are created. Some local wires and regs are used as inputs and outputs for these modules.
+
+Besides combining these three modules the **sevenseg_display_controller** has a `case` structure in it to set the current shown digit depending on the state of the **digit_selector**.
+
+```verilog
+`default_nettype none
+`ifndef __SEVENSEGDISPLAYCONTROLLER__
+`define __SEVENSEGDISPLAYCONTROLLER__
+
+`include "bcd_splitter.v"
+`include "digit_selector.v"
+`include "sevenseg_decoder.v"
+
+module sevenseg_display_controller(
+    input wire clk,
+    input wire rst,
+    input wire trigger,
+    input wire [7:0] value,
+    output wire [6:0] seg,
+    output wire done
+);
+    wire [1:0] state;
+    wire [3:0] hundreds, tens, ones;
+    reg [3:0] current_digit;
+
+    localparam DISPLAY_OFF = 4'd10;
+
+    bcd_splitter splitter (
+        .value(value),
+        .hundreds(hundreds),
+        .tens(tens),
+        .ones(ones)
+    );
+
+    digit_selector selector (
+        .clk(clk),
+        .rst(rst),
+        .trigger(trigger),
+        .state(state),
+        .done(done)
+    );
+
+    sevenseg_decoder decoder (
+        .digit(current_digit),
+        .seg(seg)
+    );
+
+    always @(*) begin
+        case (state)
+            2'd0: current_digit = hundreds;
+            2'd1: current_digit = tens;
+            2'd2: current_digit = ones;
+            2'd3: current_digit = DISPLAY_OFF;
+            default: current_digit = DISPLAY_OFF;
+        endcase
+    end
+endmodule
+
+`endif
+`default_nettype wire
+```
 
 ### random_number_generator
 
