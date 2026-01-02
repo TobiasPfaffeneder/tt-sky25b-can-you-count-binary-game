@@ -368,11 +368,13 @@ After all digits have been displayed, a short done pulse is asserted.
 
 ### random_number_generator
 
-The **random_number_generator** module generates the numbers that the player must convert to binary. Actually this module does not create real random numbers, but  pseudo random numbers using a linear feedback shift register (LFSR). 
-A LFSR is a simple register that is shifted by 1-bit each clock cycle. The new bit that is shifted into the register is calculated with a x-or operatation of selected bits of the register. The result is a long sequence of seemingly random numbers.
-To work properly the LFSR has to be initialized with a number unequal to zero. The reset value is called seed and is set to 8'hA5 in this module.
+The **random_number_generator** module generates the numbers that the player must convert to binary. Rather than producing truly random numbers, the module generates *pseudo-random* values using a **linear feedback shift register (LFSR)**.
 
-The module has only the *clk*-signal and the *rst*-signal as inputs. The output is the register *random* which represents the LSFR.
+An LFSR is a simple shift register that shifts its contents by one bit on each clock cycle. The new bit shifted into the register is computed using an XOR operation on selected bits of the register. This mechanism produces a long sequence of values that appear random.
+
+For correct operation, the LFSR must be initialized with a non-zero value. This initial value, referred to as the *seed*, is set to `8'hA5` in this module.
+
+The module has only the `clk` and `rst` signals as inputs. Its output is the register `random`, which represents the current state of the LFSR.
 
 ```verilog
 module random_number_generator (
@@ -391,11 +393,51 @@ module random_number_generator (
 endmodule
 ```
 
-The testbench of the module is very simple. It contains to resets of the module with some clock cycles inbetween to show that sequences of random numbers is equal after every reset.
+The testbench for this module is simple. It applies two resets to the module with several clock cycles in between to demonstrate that the generated pseudo-random sequence repeats identically after each reset.
 
-
+![random_number_generator.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/random_number_generator.PNG?raw=true)
 
 ### timer
+
+The **timer** module is required to give the player only a limited amount of time to convert a number to binary. 
+As inputs the module has the `clk` and `rst` signal and a signal `restart_timer` that restarts the timer. The output register is the `timer_value` in seconds.
+
+After a reset the timer is not active and both the internal `counter` register and the `timer_value` are set to zero. To activate the timer a impulse of the `restart_timer` signale is required. This also restets the `counter` and the `timer_value`. 
+When `active` is one the `counter` register is increased on each clock cycle. Every time the counter reaches the `TIMER_DURATION` `counter` is reset and the `timer_value`is increased. The `TIMER_DURATION` is set to 1000 decimal which is equal to one second for a clock frequency of 1kHz.
+
+```verilog
+module timer (
+    input wire clk,
+    input wire rst,
+    input wire restart_timer,
+    output reg [7:0] timer_value  
+);
+
+    localparam TIMER_DURATION = 10'd1000; // 1 second
+    reg [9:0] counter = 0;
+    reg active = 0;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            counter <= 0;
+            active <= 0;
+            timer_value <= 8'd0;
+        end else begin
+            if (restart_timer) begin
+                active <= 1;
+                counter <= 0;
+                timer_value <= 8'd0;
+            end else if (active) begin
+                counter <= counter + 1;
+                if (counter >= TIMER_DURATION) begin
+                    counter <= 0;
+                    timer_value <= timer_value + 1;
+                end
+            end
+        end
+    end
+endmodule
+```
 
 ### blink_controller
 
