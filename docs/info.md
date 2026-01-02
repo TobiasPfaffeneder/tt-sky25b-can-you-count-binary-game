@@ -301,24 +301,20 @@ As expected, the hundreds digit (*00*), the tens digit (*01*), and the ones digi
 
 ### sevenseg_display_controller
 
-The **sevenseg_display_controller** is a top level module for the three previously shown modules. Besides the *clk* and *rst* input it gets the 8-bit *value* which should be diplayed and a *trigger* signal as an input. The outputs of the moduel are the segements of the 7-segment display and a signale that displaying the number is done.
+The **sevenseg_display_controller** serves as the top-level module that integrates the three previously described modules. In addition to the *clk* and *rst* inputs, it receives an 8-bit *value* to be displayed and a *trigger* signal as inputs. The outputs of the module are the segment control signals *seg* for the seven-segment display and a signal *done* indicating that the display sequence has completed.
 
- Inside the module one instance of the **bcd_splitter**, the **digit_selector** and the **sevenseg_decoder** are created. Some local wires and regs are used as inputs and outputs for these modules.
+Within the module, one instance each of the **bcd_splitter**, **digit_selector**, and **sevenseg_decoder** is instantiated. Several internal wires and registers are used to connect these submodules and to exchange control and data signals.
 
-Besides combining these three modules the **sevenseg_display_controller** has a `case` structure in it to set the current shown digit depending on the state of the **digit_selector**.
+Beyond simply combining the three modules, the **sevenseg_display_controller** also contains a `case` statement that selects the currently displayed digit based on the state provided by the **digit_selector**.
 
 ```verilog
-`default_nettype none
-`ifndef __SEVENSEGDISPLAYCONTROLLER__
-`define __SEVENSEGDISPLAYCONTROLLER__
-
 `include "bcd_splitter.v"
 `include "digit_selector.v"
 `include "sevenseg_decoder.v"
 
 module sevenseg_display_controller(
     input wire clk,
-    input wire rst,
+    input wire rt,
     input wire trigger,
     input wire [7:0] value,
     output wire [6:0] seg,
@@ -360,12 +356,44 @@ module sevenseg_display_controller(
         endcase
     end
 endmodule
-
-`endif
-`default_nettype wire
 ```
 
+In the testbench, the value is set to the decimal number **123**. After applying a reset, a trigger pulse is generated to start displaying the number on the seven-segment display. The resulting outputs are then inspected using **GTKWave**.
+
+To obtain readable results, a *Translate Filter Process* is applied to the `seg` signal. After the trigger, the digits of the number **123** are displayed sequentially. During the pause intervals, the `seg` signal is translated to **?**, since no corresponding entry is defined in the filter for the state where all segments are turned off.
+
+After all digits have been displayed, a short done pulse is asserted.
+
+![sevenseg_display_controller.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/sevenseg_display_controller.PNG?raw=true)
+
 ### random_number_generator
+
+The **random_number_generator** module generates the numbers that the player must convert to binary. Actually this module does not create real random numbers, but  pseudo random numbers using a linear feedback shift register (LFSR). 
+A LFSR is a simple register that is shifted by 1-bit each clock cycle. The new bit that is shifted into the register is calculated with a x-or operatation of selected bits of the register. The result is a long sequence of seemingly random numbers.
+To work properly the LFSR has to be initialized with a number unequal to zero. The reset value is called seed and is set to 8'hA5 in this module.
+
+The module has only the *clk*-signal and the *rst*-signal as inputs. The output is the register *random* which represents the LSFR.
+
+```verilog
+module random_number_generator (
+    input wire clk,
+    input wire rst,
+    output reg [7:0] random
+);
+    wire feedback = random[7] ^ random[5] ^ random[4] ^ random[3];
+
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            random <= 8'hA5;
+        else
+            random <= {random[6:0], feedback};
+    end
+endmodule
+```
+
+The testbench of the module is very simple. It contains to resets of the module with some clock cycles inbetween to show that sequences of random numbers is equal after every reset.
+
+
 
 ### timer
 
