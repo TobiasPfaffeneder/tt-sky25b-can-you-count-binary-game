@@ -27,9 +27,6 @@ The specifications provided by TinyTapeout are summarized in the following table
 
 While specifications such as the number of inputs and outputs or the adjustable clock frequency were clear, I had almost no intuition about how large a project with approximately 1000 logic gates could be. For a rough estimation, I looked through older TinyTapeout projects.
 
-While browsing through these designs, the next crucial question arose:  
-*Is it possible to learn enough about Hardware Description Languages before the tapeout deadline in a little more than a month to implement a functioning and interesting chip design?*
-
 ## Project: Can You Count Binary?
 
 Taking these challenges into account, I decided that my project should be a simple game that can be played directly on the TinyTapeout PCB without requiring any additional hardware. The idea behind using only the integrated peripherals was to make testing straightforward and to encourage more people to try the game.
@@ -69,7 +66,7 @@ No external hardware is required.
 
 ## Used Tools
 
-For the development of the project the [IIC-OSIC-TOOLS]([GitHub - iic-jku/IIC-OSIC-TOOLS: IIC-OSIC-TOOLS is an all-in-one Docker image for SKY130/GF180/IHP130-based analog and digital chip design. AMD64 and ARM64 are natively supported.](https://github.com/iic-jku/IIC-OSIC-TOOLS)) were used. The IIC-OSIC-TOOLS are an all-in-one Docker/Podman container for open-source-based integrated circuit designs for analog and digital circuit flows. They were created and are maintained by the [Department for Integrated Circuits (ICD), Johannes Kepler University (JKU)](https://iic.j**ku.a**t/). 
+For the development of the project the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) were used. The IIC-OSIC-TOOLS are an all-in-one Docker/Podman container for open-source-based integrated circuit designs for analog and digital circuit flows. They were created and are maintained by the [Department for Integrated Circuits (ICD), Johannes Kepler University (JKU)](https://iic.j**ku.a**t/). 
 
 The hardware description language used within the IIC-OSIC-TOOLS is *Verilog*. The toolset includes various software components that support a smooth workflow when developing Verilog modules. The most relevant tools used in this project include:
 
@@ -97,7 +94,7 @@ In addition to the modules themselves, a dedicated testbench was developed for e
 
 ### sevenseg_decoder
 
-The **sevenseg_decoder** is a simple module that receives a digit as a 4-bit input and decodes it for display on the seven-segment display. The output is stored in a 7-bit register. The point of the display is not used in this project.  
+The **sevenseg_decoder** is a simple module that receives a digit as a 4-bit input and decodes it for display on the seven-segment display. The output is stored in a 7-bit register. The point of the display is not used in this module.  
 The decoding is implemented using a `case` statement. If the input does not represent a valid digit, the display remains dark (default case).
 
 ```verilog
@@ -126,7 +123,7 @@ endmodule
 To test the module, a dedicated testbench was written that applies all digits sequentially as input. The results of the simulation were inspected in **GTKWave**.  
 The input is displayed in decimal form, while the output appears both in binary and through a *Translate Filter Process* as the decoded decimal digit reconstructed from the segment pattern.
 
-<img src="file:///C:/Users/tobia/AppData/Roaming/marktext/images/2025-12-03-10-49-40-image.png" title="" alt="" data-align="center">
+<img src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/sevenseg_decoder.png?raw=true" title="" alt="sevenseg_decoder.png" data-align="center">
 
 The *Translate Filter Process* is a simple pyhton script.
 
@@ -208,7 +205,7 @@ endmodule
 
 In the testbench for this module, several random values are applied as inputs. The resulting outputs are then inspected using *GTKWave*.
 
-<img src="file:///C:/Users/tobia/AppData/Roaming/marktext/images/2025-12-03-11-27-17-image.png" title="" alt="" data-align="center">
+<img src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/bcd_splitter.png?raw=true" title="" alt="bcd_splitter.png" data-align="center">
 
 ### digit_selector
 
@@ -232,10 +229,6 @@ The register *rst* is not the direct signal from the PCB-button, but the inverte
 The module also has some internal regs like a 10-bit *counter*-register, the reg *active* that stores if there is currently a number displayed, a reg *pause* that is one if there is currently a pause between to digits and a reg *digit* which stores which digit was shown last.
 
 The timings are choesen that every digit is displayed for 1 second and that the pause between the digits is half a second. 
-
-Because the sourcecode of this module is quite long and also a flow chart of the module is not very lucid the process of the module is explained in text:
-
-1. The module start
 
 ```verilog
 module digit_selector (
@@ -276,7 +269,8 @@ module digit_selector (
             end else begin
                 counter <= counter + 1;
 
-                if ((!pause && counter >= DISPLAY_TIME) || (pause && counter >= PAUSE_TIME)) begin
+                if ((!pause && counter >= DISPLAY_TIME) || 
+                    (pause && counter >= PAUSE_TIME)) begin
                     counter <= 0;
 
                     if (!pause) begin
