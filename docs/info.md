@@ -399,11 +399,13 @@ The testbench for this module is simple. It applies two resets to the module wit
 
 ### timer
 
-The **timer** module is required to give the player only a limited amount of time to convert a number to binary. 
-As inputs the module has the `clk` and `rst` signal and a signal `restart_timer` that restarts the timer. The output register is the `timer_value` in seconds.
+The **timer** module is used to limit the amount of time a player has to convert a number to binary.
 
-After a reset the timer is not active and both the internal `counter` register and the `timer_value` are set to zero. To activate the timer a impulse of the `restart_timer` signale is required. This also restets the `counter` and the `timer_value`. 
-When `active` is one the `counter` register is increased on each clock cycle. Every time the counter reaches the `TIMER_DURATION` `counter` is reset and the `timer_value`is increased. The `TIMER_DURATION` is set to 1000 decimal which is equal to one second for a clock frequency of 1kHz.
+The module has three inputs: `clk`, `rst`, and `restart_timer`, which restarts the timer. The output is the register `timer_value`, representing the elapsed time in seconds.
+
+After a reset, the timer is inactive, and both the internal `counter` register and `timer_value` are set to zero. To start the timer, a pulse on the `restart_timer` signal is required. This also resets both the `counter` and `timer_value`.
+
+When the timer is active, the `counter` increments on each clock cycle. Whenever the `counter` reaches `TIMER_DURATION`, the `counter` is reset and `timer_value` is incremented by one. In this design, `TIMER_DURATION` is set to 1000 (decimal), corresponding to one second at a clock frequency of 1 kHz.
 
 ```verilog
 module timer (
@@ -439,7 +441,60 @@ module timer (
 endmodule
 ```
 
+In the testbench, a reset is applied first. Then a pulse on `restart_timer` starts the timer. After 6 seconds, another pulse on `restart_timer` is applied. During the interval between pulses, `timer_value` increases by one every second, as expected.<img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/timer.PNG?raw=true" alt="timer.PNG" data-align="inline">
+
 ### blink_controller
+
+The **blink_controller** module is used to visualize the remaining time available to the player. For this purpose, the previously unused dot of the seven-segment display is employed. The idea is to make the dot blink increasingly faster as the remaining time decreases.
+
+The inputs of the **blink_controller** are the `clk` and `rst` signals, an `enable` signal to activate the blinking, the current `timer_value`, and the `max_time` representing the total time the player has to convert the current number to binary.
+
+The output of the module is the `point_state` register.
+
+Internally, the module operates as follows: the remaining time is calculated by subtracting `timer_value` from `max_time`. Additionally, one third of the `max_time` is computed. Depending on which third the remaining time falls into, the `blink_threshold` is adjusted so that the dot blinks faster as the remaining time decreases.
+
+A `blink_counter` is incremented on each clock cycle. Once it reaches the `blink_threshold`, the counter is reset and the `point_state` is toggled.
+
+Asserting the reset signal (`rst`) resets both the `point_state` and the `blink_counter`.
+
+```verilog
+module blink_controller (
+    input wire clk,
+    input wire rst,
+    input wire enable,
+    input wire [7:0] timer_value,
+    input wire [7:0] max_time,
+    output reg point_state
+);
+    reg [15:0] blink_counter = 0;
+    wire [15:0] blink_threshold;
+    wire [7:0] remaining = max_time - timer_value;
+    wire [7:0] third = max_time / 3;
+
+    assign blink_threshold = (remaining <= third)   ? 16'd200 :
+                             (remaining <= 2*third) ? 16'd500 :
+                                                      16'd1000;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            point_state <= 1'b0;
+            blink_counter <= 16'd0;
+        end else if (enable) begin
+            if (blink_counter >= blink_threshold) begin
+                blink_counter <= 16'd0;
+                point_state <= ~point_state;
+            end else begin
+                blink_counter <= blink_counter + 1;
+            end
+        end else begin
+            point_state <= 1'b0;
+            blink_counter <= 16'd0;
+        end
+    end
+endmodule
+```
+
+The testbench of
 
 ### tt_um_dip_switch_game_TobiasPfaffeneder
 
