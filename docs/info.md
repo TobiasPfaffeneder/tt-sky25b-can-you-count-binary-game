@@ -619,7 +619,7 @@ As observed in the GTKWave simulation, the `point_state` signal (LED on/off) tog
 
 #### Description
 
-
+<img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/state_machine.png?raw=true" alt="state_machine.png" width="315" data-align="center">
 
 #### Signal Overview
 
