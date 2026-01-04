@@ -31,7 +31,9 @@ While specifications such as the number of inputs and outputs or the adjustable 
 
 Taking these challenges into account, I decided that my project should be a simple game that can be played directly on the TinyTapeout PCB without requiring any additional hardware. The idea behind using only the integrated peripherals was to make testing straightforward and to encourage more people to try the game.
 
-The following picture shows the PCB that is used since TinyTapeout 4. <img title="" src="https://tinytapeout.com/specs/pcb/images/tt04_board_annotated.jpeg" alt="" data-align="center" width="509">The PCB features 8 DIP switches connected to the digital inputs and a seven-segment display connected to the digital outputs. The bidirectional I/O pins as well as the analog I/Os remain unused in this project.  
+The following picture shows the PCB that is used since TinyTapeout 4. 
+<img title="" src="https://tinytapeout.com/specs/pcb/images/tt04_board_annotated.jpeg" alt="" data-align="center" width="509"> 
+The PCB features 8 DIP switches connected to the digital inputs and a seven-segment display connected to the digital outputs. The bidirectional I/O pins as well as the analog I/Os remain unused in this project.  
 Given these limited peripherals, the range of possible game concepts was already quite restricted. The game idea I developed works as follows:
 
 - A random 8-bit decimal number is displayed digit by digit on the seven-segment display.
