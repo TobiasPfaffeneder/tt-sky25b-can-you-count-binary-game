@@ -619,7 +619,41 @@ As observed in the GTKWave simulation, the `point_state` signal (LED on/off) tog
 
 #### Description
 
-<img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/state_machine.png?raw=true" alt="state_machine.png" width="315" data-align="center">
+The **tt_um_dip_switch_game_TobiasPfaffeneder** module is the top-level module of my Tiny Tapeout project and combines all previously described modules into a playable game.
+
+The modules inputs and outputs correspond to the available I/Os provided by the Tiny Tapeout template. Internally, numerous wires and registers are used to connect the previously introduced modules. All internal signals are listed in the **Signal Overview** section.  
+The **tt_um_dip_switch_game_TobiasPfaffeneder** module instantiates one instance each of the **sevenseg_display_controller**, **random_number_generator**, **timer**, and **blink_controller**.
+
+To control the game flow, a state machine is used. The following description shows the structure of the state machine, as illustrated in the following flow chart:
+
+1. **Initialization**  
+   The game starts with a reset of all modules. This is achieved using the `rst_init` register, which is initialized to high and triggers a reset when the chip is powered on.
+
+2. **PREGAME**  
+   After the reset, the state machine enters the **PREGAME** state. This state ensures that each game starts with a different random number sequence.  
+   If the game would immediately enter the **GENERATE RANDOM NUMBER** state, the random number generator would always start from the seed value, resulting in identical sequences across games.  
+   To avoid this, the LFSR-based random number generator starts running immediately after the initial reset and continues operating in the background.  
+   While in the **PREGAME** state, the player must set the DIP switches to the specific pattern `00000001` to start the game.
+
+3. **GENERATE RANDOM NUMBER**  
+   In this state, the current value of the LFSR is stored in the `current_number` register. This value represents the number the player must convert to binary. After one clock cycle, the state machine advances to the next state.
+
+4. **DISPLAY NUMBER**  
+   In the **DISPLAY NUMBER** state, a pulse is generated on the `trigger_display` register, instructing the **sevenseg_display_controller** to display `current_number`.  
+   Once the number has been displayed, the game timer is started and the state machine transitions to **GUESSING**.
+
+5. **GUESSING**  
+   During the **GUESSING** state, the system checks on every clock cycle whether the player has run out of time or entered the correct binary value using the DIP switches.  
+   If the input is correct, the `score` register is incremented and the state machine returns to **GENERATE RANDOM NUMBER**.  
+   If the time expires before a correct input is detected, the state machine transitions to **SHOW SCORE**.
+
+6. **SHOW SCORE**  
+   In the **SHOW SCORE** state, `current_number` is set to the final score and the display is triggered to show the score on the seven-segment display. After one clock cycle, the state machine advances to **GAME OVER**.
+
+7. **GAME OVER**  
+   As the name suggests, the game ends in the **GAME OVER** state. To start a new game, the reset button on the TinyTapeout PCB must be pressed.
+
+<img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/state_machine.png?raw=true" alt="state_machine.png" width="255" data-align="center">
 
 #### Signal Overview
 
@@ -823,9 +857,118 @@ endmodule
 
 #### Testbench
 
-No dedicated testbench was written for the top-level module, as its functionality depends on dynamic user input that varies with the generated random number. Instead, an alternative approach was used to test the module, which is described in the following chapter.
+No dedicated testbench was written for the top-level module, as its functionality depends on dynamic user input that varies with the generated random numbers. Instead, an alternative approach was used to test the module, which is described in the following chapter.
 
 # 🕹️ Testing the game on Wokwi
+
+Since writing a testbench for the complete game would not be very practical, because it requires user input that depends on a randomly generated number, an alternative approach for testing the design was explored.
+
+One option suggested by the lecturers was to test the game on a **Field-Programmable Gate Array (FPGA)**. This approach would have required traveling to the university and manually wiring up the necessary components to test the game. Instead, a more convenient solution was sought.
+
+During this search, the following project was found:  
+[GitHub – Simon Says game in Verilog](https://github.com/wokwi/simon-verilog)
+
+This repository contains the Verilog implementation of a simple *Simon Says* game and includes a link to a simulation hosted on [Wokwi](https://wokwi.com/), an online platform for simulating digital circuits. This approach matched the requirements perfectly, as it allowed interactive testing of the design without additional hardware.
+
+To get your design running in wokwi the following steps are required:
+
+1. Start with the [Tiny Tapeout Template for Wokwi]([Wokwi - Online ESP32, STM32, Arduino Simulator](https://wokwi.com/projects/354858054593504257)) and created your own project from it.
+
+2. Add a **Custom Chip** to the design and select **Verilog** as the programming language.
+
+3. After adding the **Custom Chip** a *.json  and a *.v file are added to the Wokwi-project. 
+   The Json file is there to configure the connections of the added custom chip. For my project, which does not use the bidirectional I/Os, the Json looks like follows:
+   
+   ```json
+   {
+     "name": "dip-switch-game",
+     "author": "Tobias Pfaffeneder",
+     "pins": [
+       "clk",
+       "rst_n",
+       "ui_in_0",
+       "ui_in_1",
+       "ui_in_2",
+       "ui_in_3",
+       "ui_in_4",
+       "ui_in_5",
+       "ui_in_6",
+       "ui_in_7",
+       "",
+       "uo_out_7",
+       "uo_out_6",
+       "uo_out_5",
+       "uo_out_4",
+       "uo_out_3",
+       "uo_out_2",
+       "uo_out_1",
+       "uo_out_0"
+     ]
+   }
+   ```
+   
+   In the Verililog file all of the models you invented must be included. I than used a wokwi wrapper to include my top level module.
+   
+   ```verilog
+   module wokwi (
+       input  wire clk,          
+       input  wire rst_n,        
+       input  wire ui_in_0,      
+       input  wire ui_in_1,    
+       input  wire ui_in_2,
+       input  wire ui_in_3,
+       input  wire ui_in_4,
+       input  wire ui_in_5,
+       input  wire ui_in_6,
+       input  wire ui_in_7,
+       output wire uo_out_0,    
+       output wire uo_out_1,   
+       output wire uo_out_2,
+       output wire uo_out_3,
+       output wire uo_out_4,
+       output wire uo_out_5,
+       output wire uo_out_6,
+       output wire uo_out_7     
+   );
+   
+       wire [7:0] ui_in;
+       wire [7:0] uo_out;
+       wire [7:0] uio_in  = 8'b0;
+       wire [7:0] uio_out;
+       wire [7:0] uio_oe;
+       wire ena = 1'b1;
+   
+       assign ui_in = {ui_in_7, ui_in_6, ui_in_5, ui_in_4, ui_in_3, ui_in_2, ui_in_1, ui_in_0};
+   
+       // my top level module
+       tt_um_dip_switch_game_TobiasPfaffeneder uut (
+           .ui_in(ui_in),
+           .uo_out(uo_out),
+           .uio_in(uio_in),
+           .uio_out(uio_out),
+           .uio_oe(uio_oe),
+           .ena(ena),
+           .clk(clk),
+           .rst_n(rst_n)
+       );
+   
+       assign uo_out_0 = uo_out[0];
+       assign uo_out_1 = uo_out[1];
+       assign uo_out_2 = uo_out[2];
+       assign uo_out_3 = uo_out[3];
+       assign uo_out_4 = uo_out[4];
+       assign uo_out_5 = uo_out[5];
+       assign uo_out_6 = uo_out[6];
+       assign uo_out_7 = uo_out[7];
+   
+   endmodule
+   ```
+
+4. After creating the chip it can be wired to the hardware of your choice.
+   It is **very important** that the Input and Output chip provided in the Tiny Tapeout template are used in front and after the custom chip. Otherwise it will now work.
+   The 
+
+
 
 [https://wokwi.com/projects/446871385453862913](https://wokwi.com/projects/446871385453862913)
 
