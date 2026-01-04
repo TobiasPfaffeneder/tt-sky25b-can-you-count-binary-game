@@ -1,8 +1,8 @@
 # 📝Preamble
 
-This is my first participation in TinyTapeout. I discovered TinyTapeout when I came across the lecture *“KV Entwurf Integrierter Schaltungen”* while looking for courses to complete some additional ECTS credits during my master’s studies at JKU Linz.
+This is my first participation in Tiny Tapeout. I discovered Tiny Tapeout when I came across the lecture *“KV Entwurf Integrierter Schaltungen”* while looking for courses to complete some additional ECTS credits during my master’s studies at JKU Linz.
 
-IC design is a completely new field for me, as I am actually studying Mechatronics with a focus on electrical machines and power electronics. Even though I had little knowledge about digital circuit design and no prior experience with Hardware Description Languages (HDLs), I was immediately fascinated by the concept of TinyTapeout. That’s why I decided to take this course and participate in TinyTapeout.
+IC design is a completely new field for me, as I am actually studying Mechatronics with a focus on electrical machines and power electronics. Even though I had little knowledge about digital circuit design and no prior experience with Hardware Description Languages (HDLs), I was immediately fascinated by the concept of Tiny Tapeout. That’s why I decided to take this course and participate in Tiny Tapeout.
 
 This document serves both as the [GitHub documentation](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/info.md) for my project and as the report for the lecture. Depending on where you are reading this, some sections may therefore appear slightly over-explained.
 
@@ -10,7 +10,7 @@ This document serves both as the [GitHub documentation](https://github.com/Tobia
 
 ## Project Restrictions
 
-After receiving an initial introduction to TinyTapeout during the workshop on 24.09.2025 at JKU, the next challenge was to come up with a project idea.  
+After receiving an initial introduction to Tiny Tapeout during the workshop on 24.09.2025 at JKU, the next challenge was to come up with a project idea.  
 In the lecture, we were relatively free to choose a project we wanted to work on. The only requirements were that it had to comply with the specifications provided by TinyTapeout ([TinyTapeout – Specs](https://tinytapeout.com/specs/)) and that it should be interesting enough to form the basis of a report with a minimum length of 20 pages.
 
 The specifications provided by TinyTapeout are summarized in the following table:
@@ -25,7 +25,7 @@ The specifications provided by TinyTapeout are summarized in the following table
 | Analog Inputs/Outputs     | 6                        |
 | PMOD PCBs                 | USB, VGA, PS/2, ...      |
 
-While specifications such as the number of inputs and outputs or the adjustable clock frequency were clear, I had almost no intuition about how large a project with approximately 1000 logic gates could be. For a rough estimation, I looked through older TinyTapeout projects.
+While specifications such as the number of inputs and outputs or the adjustable clock frequency were clear, I had almost no intuition about how large a project with approximately 1000 logic gates could be. For a rough estimation, I looked through older Tiny Tapeout projects.
 
 ## Project: Can You Count Binary?
 
@@ -47,7 +47,7 @@ Given these limited peripherals, the range of possible game concepts was already
 Defining the top-level I/O was fairly straightforward, as the standard peripherals included on the PCB are used.  
 The only parameter that needed to be chosen was the clock frequency. Since the design does not require high-speed inputs or precise timing, a relatively slow clock frequency of 1 kHz was selected.
 
-The PCB also features a reset button. It is normally pulled high and goes to GND when pressed. The modules implemented later in the design are therefore expected to perform a reset when this signal is activated.
+The PCB also features a reset button. It is normally pulled high and goes to GND when pressed. The modules implemented later in the design are therefore expected to perform a reset when this signal is low.
 
 | Signal        | Dir | W   | Description                                |
 | ------------- | --- | --- | ------------------------------------------ |
@@ -653,7 +653,7 @@ To control the game flow, a state machine is used. The following description sho
 7. **GAME OVER**  
    As the name suggests, the game ends in the **GAME OVER** state. To start a new game, the reset button on the TinyTapeout PCB must be pressed.
 
-<img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/state_machine.png?raw=true" alt="state_machine.png" width="255" data-align="center">
+                                                       <img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/state_machine.png?raw=true" alt="state_machine.png" width="255" data-align="inline">
 
 #### Signal Overview
 
@@ -870,14 +870,15 @@ During this search, the following project was found:
 
 This repository contains the Verilog implementation of a simple *Simon Says* game and includes a link to a simulation hosted on [Wokwi](https://wokwi.com/), an online platform for simulating digital circuits. This approach matched the requirements perfectly, as it allowed interactive testing of the design without additional hardware.
 
-To get your design running in wokwi the following steps are required:
+To run the design in **Wokwi**, the following steps are required:
 
-1. Start with the [Tiny Tapeout Template for Wokwi]([Wokwi - Online ESP32, STM32, Arduino Simulator](https://wokwi.com/projects/354858054593504257)) and created your own project from it.
+1. Start with the [Tiny Tapeout Template for Wokwi](https://wokwi.com/projects/354858054593504257) and create your own project from it.
 
 2. Add a **Custom Chip** to the design and select **Verilog** as the programming language.
 
-3. After adding the **Custom Chip** a *.json  and a *.v file are added to the Wokwi-project. 
-   The Json file is there to configure the connections of the added custom chip. For my project, which does not use the bidirectional I/Os, the Json looks like follows:
+3. After adding the **Custom Chip**, a `.json` file and a `.v` file are automatically created in the Wokwi project.
+   
+   The JSON file is used to configure the pin connections of the custom chip. Since this project does not use the bidirectional I/Os, the JSON configuration looks as follows:
    
    ```json
    {
@@ -907,7 +908,7 @@ To get your design running in wokwi the following steps are required:
    }
    ```
    
-   In the Verililog file all of the models you invented must be included. I than used a wokwi wrapper to include my top level module.
+   In the corresponding Verilog file, all modules of the design must be included. A Wokwi wrapper module is then used to instantiate the Tiny Tapeout top-level module:
    
    ```verilog
    module wokwi (
@@ -964,18 +965,23 @@ To get your design running in wokwi the following steps are required:
    endmodule
    ```
 
-4. After creating the chip it can be wired to the hardware of your choice.
-   It is **very important** that the Input and Output chip provided in the Tiny Tapeout template are used in front and after the custom chip. Otherwise it will now work.
-   The 
+4. After creating the custom chip, it can be wired to the desired hardware components in Wokwi.
+   
+   ⚠ **Important:**  
+   The input and output chips provided in the Tiny Tapeout template **must** be used before and after the custom chip. Otherwise, the simulation will not work correctly.
+   
+   A possible Wokwi setup for this project is shown below:
+   ![wokwi.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/wokwi.PNG?raw=true)
 
 
 
-[https://wokwi.com/projects/446871385453862913](https://wokwi.com/projects/446871385453862913)
+The game can be tested interactively at:  
+👉 **[Can You Count Binary? – Wokwi Simulation](https://wokwi.com/projects/446871385453862913)**
 
 # ▶️ How to Play
 
-1. Power up your Tiny Tapeout PCB with this module loaded.
-2. To start the game, bring all DIP switches except the 8th one in the **OFF** position.
+1. Power up your Tiny Tapeout PCB with this module loaded or start the Wokwi simulation.
+2. To start the game, bring all DIP switches except the 8th one in the **OFF** position (`00000001`).
 3. A random 8-bit number appears on the seven-segment display.
    - The number is always shown as three digits (e.g. `123`, `045`, `007`, ...).
 4. Convert the decimal number to binary and enter it using the DIP switches:
@@ -986,4 +992,10 @@ To get your design running in wokwi the following steps are required:
    - If the timer runs out before you enter the correct value, the game ends.
 7. When the game is over, your **final score** will be shown on the display.
 
----
+# 📌Summary
+
+Developing my first Verilog project was great fun. At the beginning, it was a bit intimidating to use all the provided tools, but with the supplied Docker container and shell scripts, it quickly became easy to get a working project running.
+
+Using testbenches together with a signal inspection tool like GTKWave proved to be very effective for testing individual modules. For testing the complete game, however, simulating it in Wokwi was a much better (and more enjoyable) approach.
+
+I especially appreciated the freedom we had in choosing our project idea. The workshop itself was also excellent and very different from the usual university lectures.
