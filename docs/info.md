@@ -140,7 +140,7 @@ endmodule
 To test the module, a dedicated testbench was written that applies all digits sequentially as input. The results of the simulation were inspected in GTKWave.  
 The input is displayed in decimal form, while the output appears both in binary and through a *Translate Filter Process* as the decoded decimal digit reconstructed from the segment pattern.
 
-<img src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/sevenseg_decoder.png?raw=true" title="" alt="sevenseg_decoder.png" data-align="center">
+<img src="docs/images/sevenseg_decoder.png" title="" alt="sevenseg_decoder.png" data-align="center">
 
 The *Translate Filter Process* is a simple pyhton script:
 
