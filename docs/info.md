@@ -94,8 +94,19 @@ In addition to the modules themselves, a dedicated testbench was developed for e
 
 ### sevenseg_decoder
 
+#### Description
+
 The **sevenseg_decoder** is a simple module that receives a digit as a 4-bit input and decodes it for display on the seven-segment display. The output is stored in a 7-bit register. The point of the display is not used in this module.  
 The decoding is implemented using a `case` statement. If the input does not represent a valid digit, the display remains dark (default case).
+
+#### Signal Overview
+
+| Direction | Type       | Name  | Description                                          |
+| --------- | ---------- | ----- | ---------------------------------------------------- |
+| Input     | wire [3:0] | digit | 4-bit input value representing a decimal digit (0–9) |
+| Output    | reg [6:0]  | seg   | 7-segment output pattern (segments a–g, active high) |
+
+#### Verilog Code
 
 ```verilog
 module sevenseg_decoder (
@@ -120,12 +131,14 @@ module sevenseg_decoder (
 endmodule
 ```
 
-To test the module, a dedicated testbench was written that applies all digits sequentially as input. The results of the simulation were inspected in **GTKWave**.  
+#### Testbench
+
+To test the module, a dedicated testbench was written that applies all digits sequentially as input. The results of the simulation were inspected in GTKWave.  
 The input is displayed in decimal form, while the output appears both in binary and through a *Translate Filter Process* as the decoded decimal digit reconstructed from the segment pattern.
 
 <img src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/sevenseg_decoder.png?raw=true" title="" alt="sevenseg_decoder.png" data-align="center">
 
-The *Translate Filter Process* is a simple pyhton script.
+The *Translate Filter Process* is a simple pyhton script:
 
 ```python
 #!/usr/bin/env python3
@@ -181,9 +194,25 @@ if __name__ == '__main__':
 
 ### bcd_spliter
 
-The **bcd_splitter** module separates an 8-bit binary-coded decimal value (0 to 255) into its hundreds, tens, and ones digits. All inputs and outputs are wires. To extract the individual digits, division and modulo operations are used. If the number does not contain a hundreds or tens digit, the corresponding output is set to zero.
+#### Description
+
+The **bcd_splitter** module separates an 8-bit binary-coded decimal value (0 to 255) into its hundreds, tens, and ones digits. To extract the individual digits, division and modulo operations are used. If the number does not contain a hundreds or tens digit, the corresponding output is set to zero.
 
 Although each calculated digit requires only 4 bits, the division and modulo results must first be assigned to an 8-bit wire. Directly slicing the result results in a compilation error. The values are therefore stored in intermediate 8-bit wires, from which only the lower 4 bits are forwarded to the outputs. The unused upper bits produce linter warnings, which can safely be ignored.
+
+#### Signal Overview
+
+| Direction | Type       | Name          | Description                                            |
+| --------- | ---------- | ------------- | ------------------------------------------------------ |
+| Input     | wire [7:0] | value         | Unsigned 8-bit input value to be split into BCD digits |
+| Output    | wire [3:0] | hundreds      | Hundreds digit in BCD format                           |
+| Output    | wire [3:0] | tens          | Tens digit in BCD format                               |
+| Output    | wire [3:0] | ones          | Ones digit in BCD format                               |
+| Internal  | wire [7:0] | hundreds_full | Intermediate result of value divided by 100            |
+| Internal  | wire [7:0] | tens_full     | Intermediate result of (value / 10) modulo 10          |
+| Internal  | wire [7:0] | ones_full     | Intermediate result of value modulo 10                 |
+
+#### Code
 
 ```verilog
 module bcd_splitter (
@@ -203,32 +232,44 @@ module bcd_splitter (
 endmodule
 ```
 
+#### Testbench
+
 In the testbench for this module, several random values are applied as inputs. The resulting outputs are then inspected using *GTKWave*.
 
 <img src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/bcd_splitter.png?raw=true" title="" alt="bcd_splitter.png" data-align="center">
 
 ### digit_selector
 
+#### Description
+
 The **digit_selector** module is responsible for determining which digit should be displayed at a given moment in order to represent a three-digit number on a single seven-segment display. Since the hardware can show only one digit at a time, multiplexing is required.  
 The chosen solution is to display the hundreds, tens, and ones digits sequentially, each for a short period of time. A brief pause between digits is necessar. Without this pause, numbers such as *111* would appear as if the program had frozen, because the display output would not visibly change.
-
 For numbers with fewer than three digits, leading zeros are displayed. For example, the number *3* is shown as 0 – 0 – 3.
 
-The **digit_selector** inputs are the *clk*-signal, the *rst*-signal and a *trigger*-signal. The outputs are a 2-bit register with the current display-state and a register that indicates that the number was fully displayed. The display state can have 4 values:
+The module operates as follows:  
+When a high pulse is detected on the `trigger` signal, the `state` is set to 0 (hundreds digit) and an internal counter starts incrementing. Once the counter reaches `DISPLAY_TIME`, the `state` transitions to 3 (pause, display off). When the counter then reaches `PAUSE_TIME`, the `state` is set to 1(tens digit), and the sequence continues accordingly.
 
-- 0 - hundrets digit displayed
+After all digits have been displayed, a short high pulse is asserted on the `done` signal.
 
-- 1 - tens digit displayed
+The timing parameters are chosen such that each digit is displayed for 1 second, while the pause between digits lasts 0.5 seconds.
 
-- 2 - ones digit displayed
+#### Signal Overview
 
-- 3 - pause
+| Direction | Type       | Name         | Description                                                                |
+| --------- | ---------- | ------------ | -------------------------------------------------------------------------- |
+| Input     | wire       | clk          | System clock                                                               |
+| Input     | wire       | rst          | Active-high synchronous reset                                              |
+| Input     | wire       | trigger      | Starts the digit selection sequence                                        |
+| Output    | reg [1:0]  | state        | Currently active digit index (0 = hundrets, 1 = tens, 2 = ones, 3 = pause) |
+| Output    | reg        | done         | Asserted for one clock cycle when the sequence is finished                 |
+| Internal  | reg [10:0] | counter      | Time counter for display and pause intervals                               |
+| Internal  | reg        | pause        | Indicates pause phase between digit displays                               |
+| Internal  | reg        | active       | Indicates that the digit selection sequence is running                     |
+| Internal  | reg [1:0]  | digit        | Current digit counter (0–2)                                                |
+| Internal  | localparam | DISPLAY_TIME | Number of clock cycles a digit is displayed (1000 = 1 sec)                 |
+| Internal  | localparam | PAUSE_TIME   | Number of clock cycles for the pause between digits (500 = 0.5 sec)        |
 
-The register *rst* is not the direct signal from the PCB-button, but the inverted signal. Therfore if *rst* is high a reset should be performed. This is the same in all later modules.
-
-The module also has some internal regs like a 10-bit *counter*-register, the reg *active* that stores if there is currently a number displayed, a reg *pause* that is one if there is currently a pause between to digits and a reg *digit* which stores which digit was shown last.
-
-The timings are choesen that every digit is displayed for 1 second and that the pause between the digits is half a second. 
+#### Verilog Code
 
 ```verilog
 module digit_selector (
@@ -294,18 +335,41 @@ module digit_selector (
 endmodule
 ```
 
-In the testbench for this module, a reset is applied first, followed by two trigger signals separated by a time interval of 6 seconds. The resulting outputs are then inspected using **GTKWave**.  
-As expected, the hundreds digit (*00*), the tens digit (*01*), and the ones digit (*10*) are displayed sequentially, with a pause state (*11*) in between. After all digits have been shown,followed by one additional pause, the `done` signal is asserted for a short period of time.
+#### Testbench
+
+In the testbench for this module, a reset is applied first, followed by two trigger signals separated by a time interval of 6 seconds. The resulting outputs are then inspected using GTKWave.  
+As expected, the hundreds digit (*00*), the tens digit (*01*), and the ones digit (*10*) are displayed sequentially, with a pause state (*11*) in between. After all digits have been shown, followed by one additional pause, the `done` signal is asserted for a short period of time.
 
 ![digit_selector.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/digit_selector.PNG?raw=true)
 
 ### sevenseg_display_controller
 
-The **sevenseg_display_controller** serves as the top-level module that integrates the three previously described modules. In addition to the *clk* and *rst* inputs, it receives an 8-bit *value* to be displayed and a *trigger* signal as inputs. The outputs of the module are the segment control signals *seg* for the seven-segment display and a signal *done* indicating that the display sequence has completed.
+#### Description
 
-Within the module, one instance each of the **bcd_splitter**, **digit_selector**, and **sevenseg_decoder** is instantiated. Several internal wires and registers are used to connect these submodules and to exchange control and data signals.
+The **sevenseg_display_controller** serves as the top-level module that integrates the three previously described modules. It receives an 8-bit `value` to be displayed and a `trigger` signal as inputs.
 
-Beyond simply combining the three modules, the **sevenseg_display_controller** also contains a `case` statement that selects the currently displayed digit based on the state provided by the **digit_selector**.
+Inside the module, one instance each of the **bcd_splitter**, **digit_selector**, and **sevenseg_decoder** is instantiated. Several internal wires and registers are used to connect these submodules and manage the flow of control and data signals.
+
+In essence, the module displays the given `value` on the seven-segment display whenever a high pulse is applied to the `trigger` signal. Once the entire number has been displayed, a short high pulse is asserted on the `done` signal.
+
+#### Signal Overview
+
+| Direction | Type             | Name          | Description                                             |
+| --------- | ---------------- | ------------- | ------------------------------------------------------- |
+| Input     | wire             | clk           | System clock                                            |
+| Input     | wire             | rst           | Active-high synchronous reset                           |
+| Input     | wire             | trigger       | Starts the display sequence                             |
+| Input     | wire [7:0]       | value         | 8-bit value to be displayed on the 7-segment display    |
+| Output    | wire [6:0]       | seg           | 7-segment output pattern (segments a–g)                 |
+| Output    | wire             | done          | Asserted when the complete display sequence is finished |
+| Internal  | wire [1:0]       | state         | Current digit selection state from digit selector       |
+| Internal  | wire [3:0]       | hundreds      | Hundreds BCD digit from BCD splitter                    |
+| Internal  | wire [3:0]       | tens          | Tens BCD digit from BCD splitter                        |
+| Internal  | wire [3:0]       | ones          | Ones BCD digit from BCD splitter                        |
+| Internal  | reg [3:0]        | current_digit | Currently selected digit forwarded to the decoder       |
+| Internal  | localparam [3:0] | DISPLAY_OFF   | Special digit value to turn all segments off            |
+
+#### Verilog Code
 
 ```verilog
 `include "bcd_splitter.v"
@@ -314,7 +378,7 @@ Beyond simply combining the three modules, the **sevenseg_display_controller** a
 
 module sevenseg_display_controller(
     input wire clk,
-    input wire rt,
+    input wire rst,
     input wire trigger,
     input wire [7:0] value,
     output wire [6:0] seg,
@@ -358,9 +422,11 @@ module sevenseg_display_controller(
 endmodule
 ```
 
-In the testbench, the value is set to the decimal number **123**. After applying a reset, a trigger pulse is generated to start displaying the number on the seven-segment display. The resulting outputs are then inspected using **GTKWave**.
+#### Testbench
 
-To obtain readable results, a *Translate Filter Process* is applied to the `seg` signal. After the trigger, the digits of the number **123** are displayed sequentially. During the pause intervals, the `seg` signal is translated to **?**, since no corresponding entry is defined in the filter for the state where all segments are turned off.
+In the testbench, the value is set to the decimal number 123. After applying a reset, a trigger pulse is generated to start displaying the number on the seven-segment display. The resulting outputs are then inspected using GTKWave.
+
+To obtain readable results, a *Translate Filter Process* is applied to the `seg` signal. After the trigger, the digits of the number 123 are displayed sequentially. During the pause intervals, the `seg` signal is translated to ?, since no corresponding entry is defined in the filter for the state where all segments are turned off.
 
 After all digits have been displayed, a short done pulse is asserted.
 
@@ -368,13 +434,24 @@ After all digits have been displayed, a short done pulse is asserted.
 
 ### random_number_generator
 
+#### Description
+
 The **random_number_generator** module generates the numbers that the player must convert to binary. Rather than producing truly random numbers, the module generates *pseudo-random* values using a **linear feedback shift register (LFSR)**.
 
-An LFSR is a simple shift register that shifts its contents by one bit on each clock cycle. The new bit shifted into the register is computed using an XOR operation on selected bits of the register. This mechanism produces a long sequence of values that appear random.
+An LFSR is a simple register that shifts its contents by one bit on each clock cycle. The new bit shifted into the register is computed using an XOR operation on selected bits of the register. This mechanism produces a long sequence of values that appear random.
 
 For correct operation, the LFSR must be initialized with a non-zero value. This initial value, referred to as the *seed*, is set to `8'hA5` in this module.
 
-The module has only the `clk` and `rst` signals as inputs. Its output is the register `random`, which represents the current state of the LFSR.
+#### Signal Overview
+
+| Direction | Type      | Name     | Description                                                   |
+| --------- | --------- | -------- | ------------------------------------------------------------- |
+| Input     | wire      | clk      | System clock                                                  |
+| Input     | wire      | rst      | Active-high synchronous reset                                 |
+| Output    | reg [7:0] | random   | Current 8-bit pseudo-random value                             |
+| Internal  | wire      | feedback | XOR feedback signal for linear-feedback shift register (LFSR) |
+
+#### Verilog Code
 
 ```verilog
 module random_number_generator (
@@ -393,19 +470,37 @@ module random_number_generator (
 endmodule
 ```
 
+#### Testbench
+
 The testbench for this module is simple. It applies two resets to the module with several clock cycles in between to demonstrate that the generated pseudo-random sequence repeats identically after each reset.
 
 ![random_number_generator.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/random_number_generator.PNG?raw=true)
 
 ### timer
 
+#### Description
+
 The **timer** module is used to limit the amount of time a player has to convert a number to binary.
 
-The module has three inputs: `clk`, `rst`, and `restart_timer`, which restarts the timer. The output is the register `timer_value`, representing the elapsed time in seconds.
-
-After a reset, the timer is inactive, and both the internal `counter` register and `timer_value` are set to zero. To start the timer, a pulse on the `restart_timer` signal is required. This also resets both the `counter` and `timer_value`.
+To start the timer, a pulse on the `restart_timer` signal is required. This also resets both the internal `counter` register and `timer_value`, which represents the elapsed time since the last timer restart.
 
 When the timer is active, the `counter` increments on each clock cycle. Whenever the `counter` reaches `TIMER_DURATION`, the `counter` is reset and `timer_value` is incremented by one. In this design, `TIMER_DURATION` is set to 1000 (decimal), corresponding to one second at a clock frequency of 1 kHz.
+
+There is also a complete `rst` signal, which sets the timer to an inactive state and resets both the internal `counter` register and `timer_value` to zero.
+
+#### Signal Overview
+
+| Direction | Type             | Name           | Description                                                          |
+| --------- | ---------------- | -------------- | -------------------------------------------------------------------- |
+| Input     | wire             | clk            | System clock                                                         |
+| Input     | wire             | rst            | Active-high synchronous reset                                        |
+| Input     | wire             | restart_timer  | Starts or restarts the timer counting                                |
+| Output    | reg [7:0]        | timer_value    | Current timer value (increments every `TIMER_DURATION` clock cycles) |
+| Internal  | reg [9:0]        | counter        | Counts clock cycles up to `TIMER_DURATION` for 1-second increment    |
+| Internal  | reg              | active         | Indicates whether the timer is currently counting                    |
+| Internal  | localparam [9:0] | TIMER_DURATION | Number of clock cycles corresponding to 1 timer increment (1000)     |
+
+#### Verilog Code
 
 ```verilog
 module timer (
@@ -441,21 +536,39 @@ module timer (
 endmodule
 ```
 
+#### Testbench
+
 In the testbench, a reset is applied first. Then a pulse on `restart_timer` starts the timer. After 6 seconds, another pulse on `restart_timer` is applied. During the interval between pulses, `timer_value` increases by one every second, as expected.<img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/timer.PNG?raw=true" alt="timer.PNG" data-align="inline">
 
 ### blink_controller
 
+#### Description
+
 The **blink_controller** module is used to visualize the remaining time available to the player. For this purpose, the previously unused dot of the seven-segment display is employed. The idea is to make the dot blink increasingly faster as the remaining time decreases.
 
-The inputs of the **blink_controller** are the `clk` and `rst` signals, an `enable` signal to activate the blinking, the current `timer_value`, and the `max_time` representing the total time the player has to convert the current number to binary.
-
-The output of the module is the `point_state` register.
-
-Internally, the module operates as follows: the remaining time is calculated by subtracting `timer_value` from `max_time`. Additionally, one third of the `max_time` is computed. Depending on which third the remaining time falls into, the `blink_threshold` is adjusted so that the dot blinks faster as the remaining time decreases.
+The module operates as follows: 
+The remaining time is calculated by subtracting the given `timer_value` from given `max_time`. Additionally, one third of the `max_time` is computed. Depending on which third the remaining time falls into, the `blink_threshold` is adjusted so that the dot blinks faster as the remaining time decreases.
 
 A `blink_counter` is incremented on each clock cycle. Once it reaches the `blink_threshold`, the counter is reset and the `point_state` is toggled.
 
-Asserting the reset signal (`rst`) resets both the `point_state` and the `blink_counter`.
+Asserting the reset signal `rst` resets both the `point_state` and the `blink_counter`.
+
+#### Signal Overview
+
+| Direction | Type        | Name            | Description                                         |
+| --------- | ----------- | --------------- | --------------------------------------------------- |
+| Input     | wire        | clk             | System clock                                        |
+| Input     | wire        | rst             | Active-high synchronous reset                       |
+| Input     | wire        | enable          | Enables the blinking of the point LED               |
+| Input     | wire [7:0]  | timer_value     | Current value of the timer (counts elapsed time)    |
+| Input     | wire [7:0]  | max_time        | Maximum time allowed for the guessing phase         |
+| Output    | reg         | point_state     | Blinking output state of the point LED              |
+| Internal  | reg [15:0]  | blink_counter   | Counts clock cycles to determine blinking intervals |
+| Internal  | wire [15:0] | blink_threshold | Determines blink speed based on remaining time      |
+| Internal  | wire [7:0]  | remaining       | Remaining time (`max_time - timer_value`)           |
+| Internal  | wire [7:0]  | third           | One third of the maximum time (`max_time / 3`)      |
+
+#### Verilog Code
 
 ```verilog
 module blink_controller (
@@ -494,9 +607,223 @@ module blink_controller (
 endmodule
 ```
 
-The testbench of
+#### Testbench
+
+In the testbench for this module, all three blinking speeds are tested. First, a reset is applied and `max_time` is set to a constant value of 30. The `timer_value` is then varied from 0 to 15 and finally to 25, with intervals of 10 seconds between each change.
+
+As observed in the GTKWave simulation, the `point_state` signal (LED on/off) toggles faster as the `timer_value` increases, confirming the correct behavior of the blinking speed control.
+
+![blink_controller.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/blink_controller.PNG?raw=true)
 
 ### tt_um_dip_switch_game_TobiasPfaffeneder
+
+#### Description
+
+
+
+#### Signal Overview
+
+| Direction | Type             | Name                   | Description                                      |
+| --------- | ---------------- | ---------------------- | ------------------------------------------------ |
+| Input     | wire [7:0]       | ui_in                  | General purpose inputs (DIP switches)            |
+| Input     | wire [7:0]       | uio_in                 | Bidirectional user I/O inputs (unused)           |
+| Input     | wire             | ena                    | Enable signal from Tiny Tapeout (unused)         |
+| Input     | wire             | clk                    | System clock                                     |
+| Input     | wire             | rst_n                  | Active-low external reset                        |
+| Output    | wire [7:0]       | uo_out                 | Gerneral purpose outputs (7-segment display)     |
+| Output    | wire [7:0]       | uio_out                | Bidirectional I/Os (unused)                      |
+| Output    | wire [7:0]       | uio_oe                 | I/O enable for bidirectional I/O (unused)        |
+| Internal  | wire             | rst_button             | Reset derived from inverted `rst_n`              |
+| Internal  | reg              | rst_init               | Power-on initialization reset flag               |
+| Internal  | wire             | rst                    | Combined reset signal (`rst_button OR rst_init`) |
+| Internal  | wire [7:0]       | user_input             | User input vector derived from DIP switches      |
+| Internal  | reg [7:0]        | uo_out_reg             | Registered output for `uo_out`                   |
+| Internal  | wire [7:0]       | random_number          | Pseudo-random number from RNG module             |
+| Internal  | wire [6:0]       | seg_display            | 7-segment display output pattern                 |
+| Internal  | reg              | trigger_display        | Triggers the display controller                  |
+| Internal  | wire             | display_done           | Indicates completion of number display           |
+| Internal  | wire [7:0]       | timer_value            | Elapsed time value from timer module             |
+| Internal  | reg              | restart_timer          | Restarts the timer at the beginning of guessing  |
+| Internal  | wire             | point_state            | Blinking point LED state during guessing phase   |
+| Internal  | localparam [7:0] | BASETIME               | Base guessing time (30 seconds)                  |
+| Internal  | wire [7:0]       | dynamic_maxtime        | Time limit dynamically adjusted based on score   |
+| Internal  | reg [7:0]        | score                  | Current player score                             |
+| Internal  | reg [7:0]        | current_number         | Number to be displayed or guessed                |
+| Internal  | localparam [2:0] | PREGAME                | FSM state: waiting for game start                |
+| Internal  | localparam [2:0] | GENERATE_RANDOM_NUMBER | FSM state: generate random number                |
+| Internal  | localparam [2:0] | DISPLAY_NUMBER         | FSM state: display number                        |
+| Internal  | localparam [2:0] | GUESSING               | FSM state: player guessing phase                 |
+| Internal  | localparam [2:0] | SHOW_SCORE             | FSM state: display final score                   |
+| Internal  | localparam [2:0] | GAME_OVER              | FSM state: game finished                         |
+| Internal  | reg [2:0]        | game_state             | Current game FSM state                           |
+| Internal  | wire             | _unused                | Dummy wire to avoid unused-signal warnings       |
+
+#### Verilog Code
+
+```verilog
+`include "sevenseg_display_controller.v"
+`include "random_number_generator.v"
+`include "timer.v"
+`include "blink_controller.v"
+
+module tt_um_dip_switch_game_TobiasPfaffeneder (
+    input wire [7:0] ui_in,
+    output wire [7:0] uo_out,
+    input wire [7:0] uio_in,
+    output wire [7:0] uio_out,
+    output wire [7:0] uio_oe,
+    input wire ena,
+    input wire clk,
+    input wire rst_n
+);
+    // general
+    wire rst_button = ~rst_n;
+    reg rst_init = 1'b1;
+    wire rst = rst_button | rst_init;
+    wire [7:0] user_input = {ui_in[0],ui_in[1],ui_in[2],ui_in[3],ui_in[4],ui_in[5],ui_in[6],ui_in[7]};
+    reg [7:0] uo_out_reg = 8'b00000000;
+
+    // random number
+    wire [7:0] random_number;
+
+    // display
+    wire [6:0] seg_display;
+    reg trigger_display = 1'b0;
+    wire display_done;
+
+    // timer
+    wire [7:0] timer_value;
+    reg restart_timer = 1'b0;
+    wire point_state;
+    localparam BASETIME = 8'd30;
+    wire [7:0] dynamic_maxtime;
+
+    // game
+    reg [7:0] score = 8'd0;
+    reg [7:0] current_number = 8'd0;
+
+    // state machine 
+    localparam PREGAME = 3'd0;
+    localparam GENERATE_RANDOM_NUMBER = 3'd1;
+    localparam DISPLAY_NUMBER = 3'd2;
+    localparam GUESSING = 3'd3;
+    localparam SHOW_SCORE = 3'd4;
+    localparam GAME_OVER = 3'd5;
+    reg [2:0] game_state = PREGAME;
+
+    // Instances of modules
+    random_number_generator rng (
+        .clk(clk),
+        .rst(rst),
+        .random(random_number)
+    );
+
+    sevenseg_display_controller display_ctrl (
+        .clk(clk),
+        .rst(rst),
+        .trigger(trigger_display),
+        .value(current_number),
+        .seg(seg_display),
+        .done(display_done)
+    );
+
+    timer tim (
+        .clk(clk),
+        .rst(rst),
+        .restart_timer(restart_timer),
+        .timer_value(timer_value)
+    );
+
+    blink_controller blink_ctrl (
+        .clk(clk),
+        .rst(rst),
+        .enable(game_state == GUESSING),
+        .timer_value(timer_value),
+        .MAXTIME(dynamic_maxtime),
+        .point_state(point_state)
+    );
+
+    // initialize all modules
+    always @(posedge clk) begin
+        if(rst_init)
+            rst_init <= 1'b0;
+    end
+
+    // assign guessing time
+    assign dynamic_maxtime = (score < 10) ? BASETIME - score :
+                             (score < 20) ? 20 - (score - 10)/2 :
+                             (score < 30) ? 15 - (score - 20)/3 :
+                                            10;
+
+    // state machine
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            trigger_display <= 1'b0;
+            restart_timer <= 1'b0;
+            current_number <= 8'd0;
+            score <= 8'd0;
+            uo_out_reg <= 8'b00000000;
+            game_state <= PREGAME;
+        end else begin
+            case (game_state)
+                PREGAME: begin
+                    if (user_input == 8'b00000001) begin
+                        game_state <= GENERATE_RANDOM_NUMBER;
+                    end
+                end
+                GENERATE_RANDOM_NUMBER: begin
+                    current_number <= random_number;
+                    game_state <= DISPLAY_NUMBER;
+                end
+                DISPLAY_NUMBER: begin
+                    if (!trigger_display && !display_done) trigger_display <= 1'b1;
+                    else trigger_display <= 1'b0;
+
+                    if (display_done) begin
+                        game_state <= GUESSING;
+                        restart_timer <= 1'b1;
+                    end
+                end
+                GUESSING: begin
+                    if (trigger_display) trigger_display <= 1'b0;
+                    if (restart_timer) restart_timer <= 1'b0;
+
+                    if (timer_value > dynamic_maxtime) begin
+                        game_state <= SHOW_SCORE;
+                    end else if (user_input == current_number) begin
+                        score <= score + 1;
+                        game_state <= GENERATE_RANDOM_NUMBER;
+                    end
+                end
+                SHOW_SCORE: begin
+                    current_number <= score;
+                    trigger_display <= 1'b1;
+                    game_state <= GAME_OVER;
+                end
+                GAME_OVER: begin
+                    trigger_display <= 1'b0;
+                end
+                default: game_state <= PREGAME;
+            endcase
+
+            uo_out_reg <= {(game_state == GUESSING) ? point_state : 1'b0, seg_display};
+        end
+    end
+
+    // outputs
+    assign uo_out = uo_out_reg;
+    assign uio_out = 8'b0;
+    assign uio_oe = 8'b0;
+
+    wire _unused = &{uio_in, ena};
+
+endmodule
+
+```
+
+#### Testbench
+
+No dedicated testbench was written for the top-level module, as its functionality depends on dynamic user input that varies with the generated random number. Instead, an alternative approach was used to test the module, which is described in the following chapter.
 
 # 🕹️ Testing the game on Wokwi
 
