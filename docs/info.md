@@ -240,7 +240,7 @@ endmodule
 
 In the testbench for this module, several random values are applied as inputs. The resulting outputs are then inspected using *GTKWave*.
 
-<img src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/bcd_splitter.png?raw=true" title="" alt="bcd_splitter.png" data-align="center">
+<img src="docs/images/bcd_splitter.png" title="" alt="bcd_splitter.png" data-align="center">
 
 ### digit_selector
 
@@ -344,7 +344,7 @@ endmodule
 In the testbench for this module, a reset is applied first, followed by two trigger signals separated by a time interval of 6 seconds. The resulting outputs are then inspected using GTKWave.  
 As expected, the hundreds digit (*00*), the tens digit (*01*), and the ones digit (*10*) are displayed sequentially, with a pause state (*11*) in between. After all digits have been shown, followed by one additional pause, the `done` signal is asserted for a short period of time.
 
-![digit_selector.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/digit_selector.PNG?raw=true)
+![digit_selector.PNG](docs/images/digit_selector.PNG)
 
 ### sevenseg_display_controller
 
@@ -434,7 +434,7 @@ To obtain readable results, a *Translate Filter Process* is applied to the `seg`
 
 After all digits have been displayed, a short done pulse is asserted.
 
-![sevenseg_display_controller.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/sevenseg_display_controller.PNG?raw=true)
+![sevenseg_display_controller.PNG](docs/images/sevenseg_display_controller.PNG)
 
 ### random_number_generator
 
@@ -478,7 +478,7 @@ endmodule
 
 The testbench for this module is simple. It applies two resets to the module with several clock cycles in between to demonstrate that the generated pseudo-random sequence repeats identically after each reset.
 
-![random_number_generator.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/random_number_generator.PNG?raw=true)
+![random_number_generator.PNG](docs/images/random_number_generator.PNG)
 
 ### timer
 
@@ -542,7 +542,7 @@ endmodule
 
 #### Testbench
 
-In the testbench, a reset is applied first. Then a pulse on `restart_timer` starts the timer. After 6 seconds, another pulse on `restart_timer` is applied. During the interval between pulses, `timer_value` increases by one every second, as expected.<img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/timer.PNG?raw=true" alt="timer.PNG" data-align="inline">
+In the testbench, a reset is applied first. Then a pulse on `restart_timer` starts the timer. After 6 seconds, another pulse on `restart_timer` is applied. During the interval between pulses, `timer_value` increases by one every second, as expected.<img title="" src="docs/images/timer.PNG" alt="timer.PNG" data-align="inline">
 
 ### blink_controller
 
@@ -617,7 +617,7 @@ In the testbench for this module, all three blinking speeds are tested. First, a
 
 As observed in the GTKWave simulation, the `point_state` signal (LED on/off) toggles faster as the `timer_value` increases, confirming the correct behavior of the blinking speed control.
 
-![blink_controller.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/blink_controller.PNG?raw=true)
+![blink_controller.PNG](docs/images/blink_controller.PNG)
 
 ### tt_um_dip_switch_game_TobiasPfaffeneder
 
@@ -657,7 +657,7 @@ To control the game flow, a state machine is used. The following description sho
 7. **GAME OVER**  
    As the name suggests, the game ends in the **GAME OVER** state. To start a new game, the reset button on the TinyTapeout PCB must be pressed.
 
-                                                       <img title="" src="https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/state_machine.png?raw=true" alt="state_machine.png" width="255" data-align="inline">
+                                                       <img title="" src="docs/images/state_machine.png" alt="state_machine.png" width="255" data-align="inline">
 
 #### Signal Overview
 
@@ -975,7 +975,7 @@ To run the design in **Wokwi**, the following steps are required:
    The input and output chips provided in the Tiny Tapeout template **must** be used before and after the custom chip. Otherwise, the simulation will not work correctly.
    
    A possible Wokwi setup for this project is shown below:
-   ![wokwi.PNG](https://github.com/TobiasPfaffeneder/tt-sky25b-can-you-count-binary-game/blob/main/docs/images/wokwi.PNG?raw=true)
+   ![wokwi.PNG](docs/images/wokwi.PNG)
 
 
 
