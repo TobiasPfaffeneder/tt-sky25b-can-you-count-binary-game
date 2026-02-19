@@ -1003,7 +1003,8 @@ After successfully testing the project, it was uploaded to GitHub using the pred
 These workflows verify that the project is correctly structured and synthesizable. As far as I understand, they perform the same essential steps that would otherwise be executed locally using tools such as Yosys and LibreLane. In other words, they synthesize the HDL design and run the full digital ASIC flow, generating the GDS layout of the chip.
 
 In order to submit the project to Tiny Tapeout, all of these GitHub Actions must pass successfully. As shown in the following figure, this is the case for my project.
-![wokwi.PNG](images/github_actions.png)
+
+![github_actions.png](images/github_actions.png)
 
 Besides verifying the correctness of the project, the GitHub Actions also generate several interesting reports and metrics:
 
@@ -1039,7 +1040,8 @@ Only three linter warnings occur in my project. These warnings originate from un
 The chip utilization of my project is **45.618%**, with a total wire length of **13476 µm**. In total, **732 standard cells** were used, excluding fill and tap cells.
 
 Using the integrated 3D Viewer on GitHub, a screenshot of the generated chip layout was captured. For better visibility, the fill cells were hidden in the screenshot.
-![wokwi.PNG](images/chip_overview.png)
+
+![chip_overview.png](images/chip_overview.png)
 # 📌Summary
 
 Developing my first Verilog project was great fun. At the beginning, it was a bit intimidating to use all the provided tools, but with the supplied Docker container and shell scripts, it quickly became easy to get a working project running.
