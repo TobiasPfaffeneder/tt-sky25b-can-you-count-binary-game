@@ -996,7 +996,7 @@ The game can be tested interactively at:
    - If the timer runs out before you enter the correct value, the game ends.
 7. When the game is over, your **final score** will be shown on the display.
 
-📩Submitting the project
+# 📩Submitting the project
 
 After successfully testing the project, it was uploaded to GitHub using the predefined Tiny Tapeout template. Within this template, every commit automatically triggers three GitHub Actions workflows: **GDS**, **docs**, and **test**.
 
